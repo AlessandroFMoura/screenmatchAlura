@@ -13,10 +13,13 @@ public class PrincipalComListas {
     public static void main(String[] args) {
         Filme meuFilme = new Filme("O Poderoso Chefão", 1970);
         meuFilme.avalia(9);
+
         Filme outroFilme = new Filme("Avatar", 2023);
         outroFilme.avalia(6);
+
         var filmeDoPaulo = new Filme("Dogville",2003);
         filmeDoPaulo.avalia(10);
+
         Series lost = new Series("Lost", 2000);
         lost.avalia(5);
 
@@ -32,7 +35,6 @@ public class PrincipalComListas {
                 System.out.println(String.format("O filme: %s está com %d de classidicação. ", filme.getNome(),filme.getClassificacao()));
             }
         }
-
 
         List<String> buscaPorArtista = new ArrayList<>();
         buscaPorArtista.add("Adam Sandler");
