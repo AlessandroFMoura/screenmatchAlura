@@ -15,6 +15,8 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 
@@ -28,63 +30,83 @@ public class PrincipalComBusca {
     public static void main(String[] args) throws IOException, InterruptedException, NoSuchAlgorithmException, KeyManagementException {
         Scanner scanner = new Scanner(System.in);
 
-        System.out.print("insira o filme que deseja extrair os dados: ");
-        var filme = scanner.nextLine();
+        List<Titulo> titulos = new ArrayList<>();
 
-        // Configuração do SSL para ignorar certificados
-        TrustManager[] trustAllCerts = new TrustManager[]{
-                new X509TrustManager() {
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
-                    }
-                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                    }
-                }
-        };
-        SSLContext sslContext = SSLContext.getInstance("TLS");
-        sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+        String filme = "";
 
-        HttpClient client = HttpClient.newBuilder()
-                .sslContext(sslContext) // Usa o contexto SSL configurado
-                .build();
-        try {
-            String apikey = System.getenv("OMDB_API_KEY");
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create("https://www.omdbapi.com/?t="+filme.replace(" ","+")+"&apikey="+apikey))
+        Gson gson = new GsonBuilder()
+                .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
+                .setPrettyPrinting()
+                .create();
+
+        while (!filme.equalsIgnoreCase("sair")) {
+            System.out.print("insira o filme que deseja extrair os dados: ");
+            filme = scanner.nextLine();
+
+            if (filme.equalsIgnoreCase("sair")) {
+                break;
+            }
+
+            // Configuração do SSL para ignorar certificados
+            TrustManager[] trustAllCerts = new TrustManager[]{
+                    new X509TrustManager() {
+                        public X509Certificate[] getAcceptedIssuers() {
+                            return null;
+                        }
+
+                        public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                        }
+
+                        public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                        }
+                    }
+            };
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+
+            HttpClient client = HttpClient.newBuilder()
+                    .sslContext(sslContext) // Usa o contexto SSL configurado
                     .build();
-            HttpResponse<String> response = client
-                    .send(request, HttpResponse.BodyHandlers.ofString());
-            String json = response.body();
+            try {
+                String apikey = System.getenv("OMDB_API_KEY");
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create("https://www.omdbapi.com/?t=" + filme.replace(" ", "+") + "&apikey=" + apikey))
+                        .build();
+                HttpResponse<String> response = client
+                        .send(request, HttpResponse.BodyHandlers.ofString());
+                String json = response.body();
 //        System.out.println(json);
 
-            Gson gson = new GsonBuilder()
-                    .setFieldNamingPolicy(FieldNamingPolicy.UPPER_CAMEL_CASE)
-                    .create();
-
-            TituloOmdb meuTituloOmdb = gson.fromJson(json, TituloOmdb.class);
-            System.out.println(meuTituloOmdb);
+                TituloOmdb meuTituloOmdb = gson.fromJson(json, TituloOmdb.class);
+                System.out.println(meuTituloOmdb);
 //        try {
-            Titulo meuTitulo = new Titulo(meuTituloOmdb);
-            System.out.println("Título já convertido:");
-            System.out.println(meuTitulo);
+                Titulo meuTitulo = new Titulo(meuTituloOmdb);
+                System.out.println("Título já convertido:");
+                System.out.println(meuTitulo);
 
-            FileWriter escrita = new FileWriter("filmes.txt");
-            escrita.write(meuTitulo.toString());
-            escrita.close();
+//                FileWriter escrita = new FileWriter("filmes.txt");
+//                escrita.write(meuTitulo.toString());
+//                escrita.close();
 
-        } catch (NumberFormatException e) {
-            System.out.println("Aconteceu um erro: ");
-            System.out.println(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            System.out.println("Algum erro de argumento na busca, verifique o endereço.");;
-        } catch (ErroDeConversaoDeAnoExcepion e){
-            System.out.println(e.getMessage());
-        } finally {
-            System.out.println("\nO programa finalizou corretamente!");
+                titulos.add(meuTitulo);
 
+            } catch (NumberFormatException e) {
+                System.out.println("Aconteceu um erro: ");
+                System.out.println(e.getMessage());
+            } catch (IllegalArgumentException e) {
+                System.out.println("Algum erro de argumento na busca, verifique o endereço.");
+                ;
+            } catch (ErroDeConversaoDeAnoExcepion e) {
+                System.out.println(e.getMessage());
+            } finally {
+                System.out.println(titulos);
+
+                FileWriter escrita = new FileWriter("filmes.json");
+                escrita.write(gson.toJson(titulos));
+                escrita.close();
+                System.out.println("\nO programa finalizou corretamente!");
+
+            }
         }
-
     }
 }
