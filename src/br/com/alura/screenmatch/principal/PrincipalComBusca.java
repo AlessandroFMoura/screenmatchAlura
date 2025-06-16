@@ -20,9 +20,10 @@ public class PrincipalComBusca {
         System.out.print("insira o filme que deseja extrair os dados: ");
         var filme = scanner.nextLine();
 
+        String apikey = System.getenv("OMDB_API_KEY");
         HttpClient client = HttpClient.newHttpClient();
         HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create("https://www.omdbapi.com/?t="+filme+"&apikey=7fa92635"))
+                .uri(URI.create("https://www.omdbapi.com/?t="+filme+"&apikey="+apikey))
                 .build();
         HttpResponse<String> response = client
                 .send(request, HttpResponse.BodyHandlers.ofString());
